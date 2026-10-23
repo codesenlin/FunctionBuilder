@@ -37,13 +37,21 @@ minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFacto
 
 ## 签名
 
-仓库**不包含**签名私钥。`signing/` 下的 `.jks` 与 `keystore.properties` 已在 `.gitignore` 中排除。
+仓库**包含**签名密钥 `signing/ipuser.jks`，这是有意为之：
 
-- 自己构建：复制 `signing/keystore.properties.example` 为 `signing/keystore.properties` 并填入自己的密钥；
-- 不配置也能编译：`assembleRelease` 会自动退回 debug 签名，产物仍可安装（只是不能覆盖安装别人的版本）。
+`ipuser` 是 iApp 工具自带的签名密钥，存在于它的安装包里，任何人都能取出来给 APK 签名。
+也就是说它本身不提供任何防护——把它藏起来只是心理安慰。放进仓库的好处是 clone 下来就能
+产出**和旧版同一个证书**的包，可以直接覆盖安装，CI 也能直接签名。
 
-原版 APK 的证书 SHA-1 是 `AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`（`CN=ipuser`）。
-用同一把私钥签名时，`versionCode` 需要大于旧版的 `100005`，本项目取 `100006`，因此可以正常覆盖安装。
+- 证书 SHA-1：`AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`（`CN=ipuser`）
+- 旧版 APK 的 `versionCode` 是 `100005`，本项目取 `100006`，所以是正常升级而不是降级
+- 构建时读取 `signing/keystore.properties`（同样已入库）
+
+如果需要换成自己的密钥，改 `signing/keystore.properties` 指向新的 `.jks`，
+并把 `.gitignore` 里那两行注释打开。
+
+**注意**：正因为这把密钥是公开的，任何拿到它的人都能签名出「看起来是官方更新」的 APK。
+如果你要把它发布到应用商店或用于正式分发，请务必换成自己生成的密钥。
 
 ## 目录结构
 

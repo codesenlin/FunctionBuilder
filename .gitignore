@@ -19,9 +19,11 @@ captures/
 .externalNativeBuild/
 .cxx/
 
-# 签名材料：本机保留即可，不要提交到仓库
-signing/*.jks
-signing/keystore.properties
+# 签名材料是刻意入库的：ipuser 是 iApp 工具自带的公开签名密钥，
+# 任何人都能用它签名，因此它本身不构成任何防护（详见 README）。
+# 换成自己的私钥时记得把下面两行打开：
+# signing/*.jks
+# signing/keystore.properties
 
 # 其他
 *.hprof
