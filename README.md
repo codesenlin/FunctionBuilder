@@ -49,23 +49,57 @@ distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-8.14.5-bin.zip
 技术栈：Kotlin 2.2.21 · AGP 8.13.0 · Gradle 8.14.5 · Compose BOM 2024.12.01 ·
 minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
 
-## 签名
+## 签名与 V3 密钥轮换
 
-仓库**包含**签名密钥 `signing/ipuser.jks`，这是有意为之：
+release 包同时带 **v1 + v2 + v3 / v3.1** 三套签名，并且用 APK Signature Scheme v3 的
+rotation lineage 从旧证书 `ipuser` 轮换到新证书 `functionbuilder`。
 
-`ipuser` 是 iApp 工具自带的签名密钥，存在于它的安装包里，任何人都能取出来给 APK 签名。
-也就是说它本身不提供任何防护——把它藏起来只是心理安慰。放进仓库的好处是 clone 下来就能
-产出**和旧版同一个证书**的包，可以直接覆盖安装，CI 也能直接签名。
+| 方案 | 签名证书 | 生效范围 |
+| --- | --- | --- |
+| v1（JAR signing） | `ipuser`（旧） | API < 24（本项目 minSdk 24，属兼容性冗余） |
+| v2 | `ipuser`（旧） | API 24 – 32 |
+| v3 / v3.1 | `functionbuilder`（新）+ 轮换链 | API 33 及以上 |
 
-- 证书 SHA-1：`AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`（`CN=ipuser`）
-- 旧版 APK 的 `versionCode` 是 `100005`，本项目取 `100006`，所以是正常升级而不是降级
-- 构建时读取 `signing/keystore.properties`（同样已入库）
+> v1/v2 必须由轮换链里**最老**的证书签，否则老系统认不出来；v3 才用新证书并携带
+> 证明轮换关系的 lineage。apksigner 在 minSdk ≥ 24 时会把 v1 报成 `false`
+> （因为该区间用 v2 就够），加 `--min-sdk-version 23` 校验即可看到 `v1: true`。
 
-如果需要换成自己的密钥，改 `signing/keystore.properties` 指向新的 `.jks`，
-并把 `.gitignore` 里那两行注释打开。
+相关文件：
 
-**注意**：正因为这把密钥是公开的，任何拿到它的人都能签名出「看起来是官方更新」的 APK。
-如果你要把它发布到应用商店或用于正式分发，请务必换成自己生成的密钥。
+| 文件 | 说明 |
+| --- | --- |
+| `signing/ipuser.jks` | 旧证书，也就是原版 APK 的签名，v1/v2 用它 |
+| `signing/release-v3.jks` | 新证书（RSA 4096 / 10000 天），v3 用它 |
+| `signing/lineage` | 轮换链，`apksigner rotate` 生成 |
+| `signing/keystore.properties` | 旧密钥配置 |
+| `signing/rotation.properties` | 新密钥 + lineage 配置 |
+
+证书指纹：
+
+- 旧 `CN=ipuser`：SHA-1 `AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`
+- 新 `CN=functionbuilder`：SHA-1 `10:CF:29:80:3F:5E:56:33:D6:EC:01:D5:C6:7F:40:5D:A1:68:FF:23`
+
+构建方式：`assembleRelease` 会先产出 `app-release-unsigned.apk`，再由 `signReleaseV3` 任务用
+apksigner 签出 `app-release.apk`（两把钥匙 + lineage）。debug 包仍然只用旧密钥签，
+方便在已装旧版的机器上反复覆盖调试。
+
+再次轮换（新证书 B 替换 functionbuilder）时：
+
+```bash
+apksigner rotate --in signing/lineage --out signing/lineage2 \
+  --old-signer --ks signing/release-v3.jks --ks-key-alias functionbuilder \
+  --new-signer --ks signing/next.jks --ks-key-alias next
+```
+
+然后把 `signing/rotation.properties` 指向新 keystore 和 `lineage2`，
+并让 v1/v2 继续使用 `signing/ipuser.jks`（最老的证书永不改变）。
+
+**关于密钥公开**：`ipuser` 是 iApp 工具自带的签名密钥，存在于它的安装包里，任何人都能取出来
+给 APK 签名，所以它本身不提供防护。仓库里的新密钥同理，为的是让 clone 下来就能产出可覆盖安装的包。
+如果要做正式分发（应用商店等），请换一把只在你自己机器上的私钥，并把 `.gitignore` 里对应的行打开。
+
+**升级兼容性**：Android 9（API 28）及以上可以凭 lineage 从旧证书平滑升级；API 24–27 的机器
+读的仍是最老的 `ipuser` 签名，所以也能正常覆盖安装；**低于 24 的系统不在支持范围内**。
 
 ## 目录结构
 

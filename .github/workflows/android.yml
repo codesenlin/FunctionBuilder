@@ -41,5 +41,5 @@ jobs:
           name: functionbuilder-apk
           path: |
             app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error

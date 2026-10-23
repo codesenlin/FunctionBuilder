@@ -8,17 +8,27 @@ plugins {
 }
 
 // ---------------------------------------------------------------------------
-// 签名：私钥和密码都在 signing/ 里，该目录不进版本库。
-// 参考 signing/keystore.properties.example 自行配置。
+// 签名分两条路：
+//   debug   —— 用旧密钥 ipuser 直接签，方便在已装旧版的机器上反复覆盖调试；
+//   release —— AGP 只产出未签名包，交给 apksigner 用「新密钥 + 轮换链」签
+//              v1 + v2 + v3，这样 Android 9+ 可以从旧证书平滑升级到新证书。
+// 配置见 signing/keystore.properties（旧密钥）和 signing/rotation.properties（新密钥 + lineage）。
 // ---------------------------------------------------------------------------
-val keystoreProps = Properties().apply {
-    val f = rootProject.file("signing/keystore.properties")
+fun loadProps(path: String): Properties = Properties().apply {
+    val f = rootProject.file(path)
     if (f.exists()) f.inputStream().use { load(it) }
 }
-val releaseKeystore = rootProject.file(
-    keystoreProps.getProperty("storeFile", "signing/ipuser.jks"),
-)
+
+val keystoreProps = loadProps("signing/keystore.properties")
+val releaseKeystore = rootProject.file(keystoreProps.getProperty("storeFile", "signing/ipuser.jks"))
 val hasAuthorKey = releaseKeystore.exists()
+
+val rotationProps = loadProps("signing/rotation.properties")
+val rotationKeystore = rootProject.file(rotationProps.getProperty("storeFile", "signing/release-v3.jks"))
+val rotationLineage = rootProject.file(rotationProps.getProperty("lineage", "signing/lineage"))
+val hasRotationKey = rotationKeystore.exists() && rotationLineage.exists()
+// 轮换签名需要两把钥匙：旧证书签 v1/v2，新证书签 v3
+val hasRotationSetup = hasRotationKey && hasAuthorKey
 
 android {
     namespace = "com.functionbuilder"
@@ -54,7 +64,10 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName(if (hasAuthorKey) "author" else "debug")
+            // 未签名输出，由下面的 signReleaseV3 任务用 apksigner + lineage 签。
+            // 没有轮换密钥时退回普通签名，保证仓库开箱可构建。
+            signingConfig = if (hasRotationSetup) null
+            else signingConfigs.getByName(if (hasAuthorKey) "author" else "debug")
         }
     }
 
@@ -112,4 +125,67 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.core)
+}
+
+// ---------------------------------------------------------------------------
+// V3 密钥轮换签名
+//
+// AGP 只会用单个 keystore 出包，不支持 v3 的 rotation lineage，所以这里在
+// assembleRelease 之后用 apksigner 重新签一次：新密钥 + 轮换链 + v1/v2/v3 全开。
+// 这样 Android 9 (API 28) 以上可以从旧证书平滑升级，旧设备仍按老规矩只认原证书。
+// ---------------------------------------------------------------------------
+val apksignerJar: File? = File(android.sdkDirectory, "build-tools")
+    .listFiles()
+    ?.filter { it.isDirectory }
+    ?.sortedByDescending { it.name }
+    ?.map { File(it, "lib/apksigner.jar") }
+    ?.firstOrNull { it.isFile }
+
+val signReleaseV3 by tasks.registering(JavaExec::class) {
+    group = "build"
+    description = "用新密钥 + 轮换链给 release APK 签名（v1 + v2 + v3）"
+
+    val outDir = layout.buildDirectory.dir("outputs/apk/release")
+    val unsignedApk = outDir.get().file("app-release-unsigned.apk").asFile
+    val signedApk = outDir.get().file("app-release.apk").asFile
+
+    onlyIf { hasRotationSetup && apksignerJar != null }
+    dependsOn("assembleRelease")
+
+    if (hasRotationSetup && apksignerJar != null) {
+        classpath = files(apksignerJar)
+        mainClass.set("com.android.apksigner.ApkSignerTool")
+        args = listOf(
+            "sign",
+            // 最老的签名者：v1（以及不支持轮换的老平台上的 v2）由它负责
+            "--ks", releaseKeystore.absolutePath,
+            "--ks-pass", "pass:${keystoreProps.getProperty("storePassword", "")}",
+            "--ks-key-alias", keystoreProps.getProperty("keyAlias", "ipuser"),
+            "--key-pass", "pass:${keystoreProps.getProperty("keyPassword", "")}",
+            // 当前签名者：v3 用它，并携带轮换链
+            "--next-signer",
+            "--ks", rotationKeystore.absolutePath,
+            "--ks-pass", "pass:${rotationProps.getProperty("storePassword", "")}",
+            "--ks-key-alias", rotationProps.getProperty("keyAlias", ""),
+            "--key-pass", "pass:${rotationProps.getProperty("keyPassword", "")}",
+            "--lineage", rotationLineage.absolutePath,
+            "--v1-signing-enabled", "true",
+            "--v2-signing-enabled", "true",
+            "--v3-signing-enabled", "true",
+            "--v4-signing-enabled", "false",
+            "--out", signedApk.absolutePath,
+            unsignedApk.absolutePath,
+        )
+        doFirst {
+            if (!unsignedApk.isFile) error("没找到未签名 APK：$unsignedApk")
+            signedApk.delete()
+        }
+        doLast {
+            logger.lifecycle("已签名（v1+v2+v3 + 轮换链）：${signedApk.absolutePath}")
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    if (hasRotationSetup) finalizedBy(signReleaseV3)
 }
