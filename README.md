@@ -32,6 +32,20 @@ export JAVA_HOME=/path/to/jdk17
 
 也可以直接用 Android Studio 打开。依赖版本集中在 `gradle/libs.versions.toml`。
 
+国内网络下载慢的话：
+
+```bash
+# Maven 依赖走阿里云镜像（默认关闭，只在你本地生效）
+./gradlew -DcnMirror=true assembleDebug
+```
+
+Gradle 本体由 `gradle/wrapper/gradle-wrapper.properties` 的 `distributionUrl` 决定，
+国内可以把官方地址临时换成腾讯云镜像（首次下载约 130MB）：
+
+```
+distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-8.14.5-bin.zip
+```
+
 技术栈：Kotlin 2.2.21 · AGP 8.13.0 · Gradle 8.14.5 · Compose BOM 2024.12.01 ·
 minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
 
