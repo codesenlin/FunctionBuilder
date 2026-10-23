@@ -1,0 +1,27 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 本机 SDK 路径
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+captures/
+.DS_Store
+
+# Native
+.externalNativeBuild/
+.cxx/
+
+# 签名材料：本机保留即可，不要提交到仓库
+signing/*.jks
+signing/keystore.properties
+
+# 其他
+*.hprof

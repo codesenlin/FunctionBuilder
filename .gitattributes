@@ -1,0 +1,12 @@
+# 统一换行符，避免 Windows 上 clone 下来脚本跑不了
+* text=auto eol=lf
+*.bat text eol=crlf
+gradlew text eol=lf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.jar binary
+*.jks binary
+*.zip binary
