@@ -9,26 +9,27 @@ plugins {
 
 // ---------------------------------------------------------------------------
 // 签名分两条路：
-//   debug   —— 用旧密钥 ipuser 直接签，方便在已装旧版的机器上反复覆盖调试；
-//   release —— AGP 只产出未签名包，交给 apksigner 用「新密钥 + 轮换链」签
-//              v1 + v2 + v3，这样 Android 9+ 可以从旧证书平滑升级到新证书。
-// 配置见 signing/keystore.properties（旧密钥）和 signing/rotation.properties（新密钥 + lineage）。
+//   debug   —— 用 ipuser 直接签，方便在已装旧版的机器上反复覆盖调试；
+//   release —— AGP 只产出未签名包，交给 apksigner 用「AOSP testkey 签 v1/v2 +
+//              ipuser 签 v3 + 轮换链」重新签，Android 9+ 可以从 AOSP 证书平滑升级。
+// 配置见 signing/keystore.properties（最新签名者 ipuser）
+//      和 signing/rotation.properties（最老签名者 AOSP testkey + lineage）。
 // ---------------------------------------------------------------------------
 fun loadProps(path: String): Properties = Properties().apply {
     val f = rootProject.file(path)
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// 最新签名者（v3 / debug 都用它）
 val keystoreProps = loadProps("signing/keystore.properties")
-val releaseKeystore = rootProject.file(keystoreProps.getProperty("storeFile", "signing/ipuser.jks"))
-val hasAuthorKey = releaseKeystore.exists()
+val latestKeystore = rootProject.file(keystoreProps.getProperty("storeFile", "signing/ipuser.jks"))
+val hasLatestKey = latestKeystore.exists()
 
+// 最老签名者（v1/v2）+ 轮换链
 val rotationProps = loadProps("signing/rotation.properties")
-val rotationKeystore = rootProject.file(rotationProps.getProperty("storeFile", "signing/release-v3.jks"))
+val oldestKeystore = rootProject.file(rotationProps.getProperty("oldStoreFile", "signing/aosp-testkey.jks"))
 val rotationLineage = rootProject.file(rotationProps.getProperty("lineage", "signing/lineage"))
-val hasRotationKey = rotationKeystore.exists() && rotationLineage.exists()
-// 轮换签名需要两把钥匙：旧证书签 v1/v2，新证书签 v3
-val hasRotationSetup = hasRotationKey && hasAuthorKey
+val hasRotationSetup = hasLatestKey && oldestKeystore.exists() && rotationLineage.exists()
 
 android {
     namespace = "com.functionbuilder"
@@ -46,9 +47,9 @@ android {
     // 作者私钥放在 signing/ 下（已 gitignore，不入库）。
     // 没有私钥时（别人 clone 下来 / CI 环境）自动退回 debug 签名，保证仓库开箱即可构建。
     signingConfigs {
-        if (hasAuthorKey) {
+        if (hasLatestKey) {
             create("author") {
-                storeFile = releaseKeystore
+                storeFile = latestKeystore
                 storePassword = keystoreProps.getProperty("storePassword", "")
                 keyAlias = keystoreProps.getProperty("keyAlias", "")
                 keyPassword = keystoreProps.getProperty("keyPassword", "")
@@ -59,7 +60,7 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName(if (hasAuthorKey) "author" else "debug")
+            signingConfig = signingConfigs.getByName(if (hasLatestKey) "author" else "debug")
         }
         release {
             isMinifyEnabled = false
@@ -67,7 +68,7 @@ android {
             // 未签名输出，由下面的 signReleaseV3 任务用 apksigner + lineage 签。
             // 没有轮换密钥时退回普通签名，保证仓库开箱可构建。
             signingConfig = if (hasRotationSetup) null
-            else signingConfigs.getByName(if (hasAuthorKey) "author" else "debug")
+            else signingConfigs.getByName(if (hasLatestKey) "author" else "debug")
         }
     }
 
@@ -143,7 +144,7 @@ val apksignerJar: File? = File(android.sdkDirectory, "build-tools")
 
 val signReleaseV3 by tasks.registering(JavaExec::class) {
     group = "build"
-    description = "用新密钥 + 轮换链给 release APK 签名（v1 + v2 + v3）"
+    description = "用 AOSP testkey + ipuser + 轮换链给 release APK 签名（v1 + v2 + v3）"
 
     val outDir = layout.buildDirectory.dir("outputs/apk/release")
     val unsignedApk = outDir.get().file("app-release-unsigned.apk").asFile
@@ -157,18 +158,20 @@ val signReleaseV3 by tasks.registering(JavaExec::class) {
         mainClass.set("com.android.apksigner.ApkSignerTool")
         args = listOf(
             "sign",
-            // 最老的签名者：v1（以及不支持轮换的老平台上的 v2）由它负责
-            "--ks", releaseKeystore.absolutePath,
-            "--ks-pass", "pass:${keystoreProps.getProperty("storePassword", "")}",
-            "--ks-key-alias", keystoreProps.getProperty("keyAlias", "ipuser"),
-            "--key-pass", "pass:${keystoreProps.getProperty("keyPassword", "")}",
-            // 当前签名者：v3 用它，并携带轮换链
+            // 最老的签名者：AOSP testkey，负责 v1 与不支持轮换的老平台上的 v2
+            "--ks", oldestKeystore.absolutePath,
+            "--ks-pass", "pass:${rotationProps.getProperty("oldStorePassword", "")}",
+            "--ks-key-alias", rotationProps.getProperty("oldKeyAlias", ""),
+            "--key-pass", "pass:${rotationProps.getProperty("oldKeyPassword", "")}",
+            // 最新的签名者：ipuser，负责 v3 并携带轮换链
             "--next-signer",
-            "--ks", rotationKeystore.absolutePath,
-            "--ks-pass", "pass:${rotationProps.getProperty("storePassword", "")}",
-            "--ks-key-alias", rotationProps.getProperty("keyAlias", ""),
-            "--key-pass", "pass:${rotationProps.getProperty("keyPassword", "")}",
+            "--ks", latestKeystore.absolutePath,
+            "--ks-pass", "pass:${keystoreProps.getProperty("storePassword", "")}",
+            "--ks-key-alias", keystoreProps.getProperty("keyAlias", ""),
+            "--key-pass", "pass:${keystoreProps.getProperty("keyPassword", "")}",
             "--lineage", rotationLineage.absolutePath,
+            // 轮换从 API 28（Android 9）开始生效：28+ 用 ipuser，24-27 仍用最老的 AOSP
+            "--rotation-min-sdk-version", "28",
             "--v1-signing-enabled", "true",
             "--v2-signing-enabled", "true",
             "--v3-signing-enabled", "true",

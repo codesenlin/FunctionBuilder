@@ -51,55 +51,62 @@ minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFacto
 
 ## 签名与 V3 密钥轮换
 
-release 包同时带 **v1 + v2 + v3 / v3.1** 三套签名，并且用 APK Signature Scheme v3 的
-rotation lineage 从旧证书 `ipuser` 轮换到新证书 `functionbuilder`。
+iApp 导出 APK 时默认用 **AOSP 公开的 testkey**（`CN=Android`）签名；0.50b 这一版是用
+**`ipuser`** 重新签的。本仓库把这条轮换关系正式写进 APK 的 v3 签名块，于是：
 
 | 方案 | 签名证书 | 生效范围 |
 | --- | --- | --- |
-| v1（JAR signing） | `ipuser`（旧） | API < 24（本项目 minSdk 24，属兼容性冗余） |
-| v2 | `ipuser`（旧） | API 24 – 32 |
-| v3 / v3.1 | `functionbuilder`（新）+ 轮换链 | API 33 及以上 |
+| v1（JAR signing） | AOSP testkey | API < 24（本项目 minSdk 24，属兼容性冗余） |
+| v2 | AOSP testkey | API 24 – 27 |
+| v3 | `ipuser` + 轮换链 | API 28 及以上 |
 
-> v1/v2 必须由轮换链里**最老**的证书签，否则老系统认不出来；v3 才用新证书并携带
-> 证明轮换关系的 lineage。apksigner 在 minSdk ≥ 24 时会把 v1 报成 `false`
-> （因为该区间用 v2 就够），加 `--min-sdk-version 23` 校验即可看到 `v1: true`。
+关键参数是 `--rotation-min-sdk-version 28`：不指定时 apksigner 默认把轮换放到 API 33+ 的
+v3.1 块里，Android 9–12 上仍会被认成 AOSP；指定 28 之后 28+ 全部走 ipuser，
+代价是 v3.1 块不再生成（`v3.1: false`，不影响 28+ 的升级）。
 
 相关文件：
 
 | 文件 | 说明 |
 | --- | --- |
-| `signing/ipuser.jks` | 旧证书，也就是原版 APK 的签名，v1/v2 用它 |
-| `signing/release-v3.jks` | 新证书（RSA 4096 / 10000 天），v3 用它 |
+| `signing/aosp-testkey.jks` | AOSP testkey 转成的 keystore，链上**最老**的证书，签 v1/v2 |
+| `signing/ipuser.jks` | 链上**最新**的证书，签 v3 / debug |
 | `signing/lineage` | 轮换链，`apksigner rotate` 生成 |
-| `signing/keystore.properties` | 旧密钥配置 |
-| `signing/rotation.properties` | 新密钥 + lineage 配置 |
+| `signing/rotation.properties` | 最老签名者 + lineage 配置 |
+| `signing/keystore.properties` | 最新签名者（ipuser）配置 |
 
 证书指纹：
 
-- 旧 `CN=ipuser`：SHA-1 `AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`
-- 新 `CN=functionbuilder`：SHA-1 `10:CF:29:80:3F:5E:56:33:D6:EC:01:D5:C6:7F:40:5D:A1:68:FF:23`
+- AOSP `CN=Android`：SHA-1 `61:ED:37:7E:85:D3:86:A8:DF:EE:6B:86:4B:D8:5B:0B:FA:A5:AF:81`
+- `CN=ipuser`：SHA-1 `AE:77:39:17:CC:7A:75:23:B4:1E:1E:B9:5B:ED:61:CF:0A:A8:E3:B0`
 
-构建方式：`assembleRelease` 会先产出 `app-release-unsigned.apk`，再由 `signReleaseV3` 任务用
-apksigner 签出 `app-release.apk`（两把钥匙 + lineage）。debug 包仍然只用旧密钥签，
-方便在已装旧版的机器上反复覆盖调试。
+构建方式：`assembleRelease` 先产出 `app-release-unsigned.apk`，再由 `signReleaseV3` 任务调用
+apksigner 签出 `app-release.apk`（AOSP 签 v1/v2 + ipuser 签 v3 + lineage）。debug 包直接用 ipuser 签，
+方便在装过旧版的机器上反复覆盖调试。
 
-再次轮换（新证书 B 替换 functionbuilder）时：
+## 升级兼容性
+
+| 已装版本 | Android 7–8.1（API 24–27） | Android 9+（API 28+） |
+| --- | --- | --- |
+| AOSP testkey 签名（iApp 直接导出） | ✅ 可升级 | ✅ 可升级（凭 lineage） |
+| ipuser 签名（0.50b 及以前的正式版） | ❌ 不可升级 | ✅ 可升级 |
+
+也就是说 Android 9 以下的老设备只有 AOSP 签名的旧包能升级；这些机型现在很少，属于可接受的取舍。
+
+再次轮换到新证书 B 时：
 
 ```bash
 apksigner rotate --in signing/lineage --out signing/lineage2 \
-  --old-signer --ks signing/release-v3.jks --ks-key-alias functionbuilder \
-  --new-signer --ks signing/next.jks --ks-key-alias next
+  --old-signer --ks signing/ipuser.jks --ks-pass pass:*** --ks-key-alias ipuser \
+  --new-signer --ks signing/next.jks    --ks-pass pass:*** --ks-key-alias next
 ```
 
-然后把 `signing/rotation.properties` 指向新 keystore 和 `lineage2`，
-并让 v1/v2 继续使用 `signing/ipuser.jks`（最老的证书永不改变）。
+然后把 `signing/rotation.properties` 的 `lineage` 指向 `lineage2`，
+`signing/keystore.properties` 指向 `next.jks`，并把 `--rotation-min-sdk-version` 调到当时的
+Android 版本。**v1/v2 永远用最老的 AOSP，不要改 `oldStoreFile`。**
 
-**关于密钥公开**：`ipuser` 是 iApp 工具自带的签名密钥，存在于它的安装包里，任何人都能取出来
-给 APK 签名，所以它本身不提供防护。仓库里的新密钥同理，为的是让 clone 下来就能产出可覆盖安装的包。
-如果要做正式分发（应用商店等），请换一把只在你自己机器上的私钥，并把 `.gitignore` 里对应的行打开。
-
-**升级兼容性**：Android 9（API 28）及以上可以凭 lineage 从旧证书平滑升级；API 24–27 的机器
-读的仍是最老的 `ipuser` 签名，所以也能正常覆盖安装；**低于 24 的系统不在支持范围内**。
+**关于密钥公开**：AOSP testkey 本来就是公开的（AOSP 源码里就有），`ipuser` 是 iApp 那套包里带的，
+同样公开，所以两把都放进了仓库，clone 下来即可构建出可覆盖安装的包。如果要做正式分发（应用商店等），
+请换一把只在自己机器上的私钥，并打开 `.gitignore` 里对应的两行。
 
 ## 目录结构
 
