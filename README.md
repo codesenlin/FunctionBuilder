@@ -177,4 +177,4 @@ app/src/main/java/com/functionbuilder/
 
 - 本项目是对「function制作助手」的重写，指令模板与图片素材来自原作者的作品；
   如需二次分发请遵循原作者的意愿。
-- 仓库未附许可证，作者确定后可在 GitHub 上选择。
+- 本项目以 [MIT](LICENSE) 许可证发布，Copyright (c) 2026 Code.森林。
