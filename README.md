@@ -20,17 +20,23 @@
 
 ## 构建
 
-需要 JDK 17、Android SDK Platform 36。
+需要 **JDK 17–24**（推荐 21）、Android SDK Platform 36。
 
 ```bash
 git clone <this-repo>
 cd FunctionBuilder
 export ANDROID_HOME=/path/to/Android/Sdk     # 或写进 local.properties
-export JAVA_HOME=/path/to/jdk17
+export JAVA_HOME=/path/to/jdk21
 ./gradlew assembleDebug
 ```
 
 也可以直接用 Android Studio 打开。依赖版本集中在 `gradle/libs.versions.toml`。
+
+> **JDK 别用 25+**：Gradle 8.14.5 只支持到 Java 24，用 JDK 25 会在 Sync 阶段直接报
+> `incompatible with the Gradle JVM version 25`。新版 Android Studio 自带 JBR 25，
+> 需要在 `Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK`
+> 里手动选 21（或 17）。本机已把项目级设置固定为 `jbr-21`（`.idea/gradle.xml`，
+> 该目录不入库，所以别人 clone 后仍需自己选一次）。
 
 国内网络下载慢的话：
 
