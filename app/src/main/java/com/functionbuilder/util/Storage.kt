@@ -25,11 +25,7 @@ object Storage {
 
     /** Android 11+ 是否已授予“所有文件访问权限”。 */
     fun hasAllFilesAccess(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            true
-        }
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
     }
 
     /**

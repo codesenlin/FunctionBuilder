@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -215,12 +216,16 @@ private fun VariableCard(
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Box(
                     Modifier
                         .background(Color(0xFFFFF9C4), RoundedCornerShape(6.dp))
                         .clickable {
-                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(row.placeholder))
+                            val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                as android.content.ClipboardManager
+                            cm.setPrimaryClip(
+                                android.content.ClipData.newPlainText("占位符", row.placeholder),
+                            )
                             onCopyPlaceholder()
                         }
                         .padding(horizontal = 8.dp, vertical = 2.dp),

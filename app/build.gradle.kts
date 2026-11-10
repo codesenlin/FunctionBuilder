@@ -32,7 +32,7 @@ val hasRotationSetup = hasLatestKey && oldestKeystore.exists() && rotationLineag
 
 android {
     namespace = "com.functionbuilder"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.functionbuilder"

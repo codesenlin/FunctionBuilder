@@ -20,7 +20,7 @@ class BatchEngineTest {
     }
 
     @Test
-    fun `初始值参与计算`() {
+    fun 初始值参与计算() {
         val result = BatchEngine.generate(
             body = "scoreboard players set pā 分数 ā",
             count = 2,
@@ -31,7 +31,7 @@ class BatchEngineTest {
     }
 
     @Test
-    fun `多个变量同时替换`() {
+    fun 多个变量同时替换() {
         val result = BatchEngine.generate(
             body = "tp @e[tag=%s] %s 64 0".format("ā", "á"),
             count = 2,
@@ -45,7 +45,7 @@ class BatchEngineTest {
     }
 
     @Test
-    fun `除法与括号`() {
+    fun 除法与括号() {
         val result = BatchEngine.generate(
             "say %s".format("ā"),
             3,
@@ -56,20 +56,20 @@ class BatchEngineTest {
     }
 
     @Test
-    fun `非法表达式返回错误而不是崩溃`() {
+    fun 非法表达式返回错误而不是崩溃() {
         val result = BatchEngine.generate("say %s".format("ā"), 1, listOf(BatchEngine.Variable("ā", "x++", 0)))
         assertFalse(result.ok)
         assertTrue(result.error!!.contains("无法计算"))
     }
 
     @Test
-    fun `空命令体或零次数被拒绝`() {
+    fun 空命令体或零次数被拒绝() {
         assertFalse(BatchEngine.generate("", 3, listOf(BatchEngine.Variable("ā", "x", 0))).ok)
         assertFalse(BatchEngine.generate("say a", 0, listOf(BatchEngine.Variable("ā", "x", 0))).ok)
     }
 
     @Test
-    fun `数字格式化去掉多余小数`() {
+    fun 数字格式化去掉多余小数() {
         assertEquals("3", BatchEngine.formatNumber(3.0))
         assertEquals("2.5", BatchEngine.formatNumber(2.5))
         assertEquals("-1", BatchEngine.formatNumber(-1.0))

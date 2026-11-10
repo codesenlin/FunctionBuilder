@@ -63,8 +63,7 @@ class FnRepository {
     }
 
     fun delete(file: File): Boolean {
-        if (!file.exists()) return true
-        return file.delete()
+        return !file.exists() || file.delete()
     }
 
     fun read(file: File): String =

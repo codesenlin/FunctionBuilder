@@ -25,7 +25,7 @@ class PackTemplateTest {
 
     @Before
     fun setUp() {
-        tmp = Files.createTempDirectory("fbtest").toFile()
+        tmp = Files.createTempDirectory("sites").toFile()
     }
 
     @After
@@ -36,7 +36,7 @@ class PackTemplateTest {
     private fun templateStream() = File("src/main/assets/functiontestin.zip").inputStream()
 
     @Test
-    fun `模板能被正确解压出行为包结构`() {
+    fun 模板能被正确解压出行为包结构() {
         assertTrue("解压失败", PackTemplate.extract(templateStream(), tmp))
 
         val root = File(tmp, PackTemplate.ROOT_DIR)
@@ -54,7 +54,7 @@ class PackTemplateTest {
     }
 
     @Test
-    fun `解压不会把文件写到目标目录之外`() {
+    fun 解压不会把文件写到目标目录之外() {
         // 构造一个带 ../ 的恶意 zip
         val evil = File(tmp, "evil.zip")
         java.util.zip.ZipOutputStream(evil.outputStream()).use { zip ->
@@ -128,7 +128,7 @@ class PackTemplateTest {
     }
 
     @Test
-    fun `递归删除能清空嵌套目录`() {
+    fun 递归删除能清空嵌套目录() {
         val root = File(tmp, "deep/pack/functions/sub").apply { mkdirs() }
         File(root, "x.mcfunction").writeText("say x")
         File(tmp, "deep/pack/manifest.json").writeText("{}")

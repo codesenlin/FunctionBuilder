@@ -20,7 +20,7 @@
 
 ## 构建
 
-需要 **JDK 17–25**（推荐 21）、Android SDK Platform 36。
+需要 **JDK 17–25**（推荐 21）、Android SDK Platform 37。
 
 ```bash
 git clone <this-repo>
@@ -69,11 +69,11 @@ minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFacto
 iApp 导出 APK 时默认用 **AOSP 公开的 testkey**（`CN=Android`）签名；0.50b 这一版是用
 **`ipuser`** 重新签的。本仓库把这条轮换关系正式写进 APK 的 v3 签名块，于是：
 
-| 方案 | 签名证书 | 生效范围 |
-| --- | --- | --- |
-| v1（JAR signing） | AOSP testkey | API < 24（本项目 minSdk 24，属兼容性冗余） |
-| v2 | AOSP testkey | API 24 – 27 |
-| v3 | `ipuser` + 轮换链 | API 28 及以上 |
+| 方案              | 签名证书          | 生效范围                                   |
+|-------------------|-------------------|--------------------------------------------|
+| v1（JAR signing） | AOSP testkey      | API < 24（本项目 minSdk 24，属兼容性冗余） |
+| v2                | AOSP testkey      | API 24 – 27                                |
+| v3                | `ipuser` + 轮换链 | API 28 及以上                              |
 
 关键参数是 `--rotation-min-sdk-version 28`：不指定时 apksigner 默认把轮换放到 API 33+ 的
 v3.1 块里，Android 9–12 上仍会被认成 AOSP；指定 28 之后 28+ 全部走 ipuser，
@@ -81,13 +81,13 @@ v3.1 块里，Android 9–12 上仍会被认成 AOSP；指定 28 之后 28+ 全�
 
 相关文件：
 
-| 文件 | 说明 |
-| --- | --- |
-| `signing/aosp-testkey.jks` | AOSP testkey 转成的 keystore，链上**最老**的证书，签 v1/v2 |
-| `signing/ipuser.jks` | 链上**最新**的证书，签 v3 / debug |
-| `signing/lineage` | 轮换链，`apksigner rotate` 生成 |
-| `signing/rotation.properties` | 最老签名者 + lineage 配置 |
-| `signing/keystore.properties` | 最新签名者（ipuser）配置 |
+| 文件                          | 说明                                                       |
+|-------------------------------|------------------------------------------------------------|
+| `signing/aosp-testkey.jks`    | AOSP testkey 转成的 keystore，链上**最老**的证书，签 v1/v2 |
+| `signing/ipuser.jks`          | 链上**最新**的证书，签 v3 / debug                          |
+| `signing/lineage`             | 轮换链，`apksigner rotate` 生成                            |
+| `signing/rotation.properties` | 最老签名者 + lineage 配置                                  |
+| `signing/keystore.properties` | 最新签名者（ipuser）配置                                   |
 
 证书指纹：
 
@@ -100,10 +100,10 @@ apksigner 签出 `app-release.apk`（AOSP 签 v1/v2 + ipuser 签 v3 + lineage）
 
 ## 升级兼容性
 
-| 已装版本 | Android 7–8.1（API 24–27） | Android 9+（API 28+） |
-| --- | --- | --- |
-| AOSP testkey 签名（iApp 直接导出） | ✅ 可升级 | ✅ 可升级（凭 lineage） |
-| ipuser 签名（0.50b 及以前的正式版） | ❌ 不可升级 | ✅ 可升级 |
+| 已装版本                            | Android 7–8.1（API 24–27） | Android 9+（API 28+）   |
+|-------------------------------------|----------------------------|-------------------------|
+| AOSP testkey 签名（iApp 直接导出）  | ✅ 可升级                  | ✅ 可升级（凭 lineage） |
+| ipuser 签名（0.50b 及以前的正式版） | ❌ 不可升级                | ✅ 可升级               |
 
 也就是说 Android 9 以下的老设备只有 AOSP 签名的旧包能升级；这些机型现在很少，属于可接受的取舍。
 
@@ -164,14 +164,14 @@ app/src/main/java/com/functionbuilder/
 
 ## 兼容性
 
-| 数据 | 路径 / 格式 |
-| --- | --- |
-| 作品根目录 | `/sdcard/Android/functiontested` |
-| 解压临时目录 | `/sdcard/Android/functiontestin` |
-| 设置文件 | `/sdcard/Android/functionbuilderin`，格式 `0.50#1#0#1` |
-| 修改时间 | 每个作品的 `test/time`，`yyyy-MM-dd HH:mm:ss` |
-| 行为包结构 | `manifest.json` + `pack_icon.png` + `functions/*.mcfunction` |
-| 装载目标 | 存档 `behavior_packs/functiontestin`，并合并 `world_behavior_packs.json` |
+| 数据         | 路径 / 格式                                                              |
+|--------------|--------------------------------------------------------------------------|
+| 作品根目录   | `/sdcard/Android/functiontested`                                         |
+| 解压临时目录 | `/sdcard/Android/functiontestin`                                         |
+| 设置文件     | `/sdcard/Android/functionbuilderin`，格式 `0.50#1#0#1`                   |
+| 修改时间     | 每个作品的 `test/time`，`yyyy-MM-dd HH:mm:ss`                            |
+| 行为包结构   | `manifest.json` + `pack_icon.png` + `functions/*.mcfunction`             |
+| 装载目标     | 存档 `behavior_packs/functiontestin`，并合并 `world_behavior_packs.json` |
 
 有「所有文件访问权限」时沿用旧路径；没有则退回 `/sdcard/Android/data/com.functionbuilder/files/functiontested`。
 

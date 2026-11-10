@@ -67,7 +67,7 @@ class FbViewModel(app: Application) : AndroidViewModel(app) {
     var editorDirty by mutableStateOf(false)
         private set
 
-    // ── 一次性提示（Snackbar） ─────────────────────────────
+    // ── 一次性提示（Snack-bar） ─────────────────────────────
     var message by mutableStateOf<String?>(null)
         private set
 
@@ -323,10 +323,8 @@ class FbViewModel(app: Application) : AndroidViewModel(app) {
 
     fun installIntoGlobalBehaviorPacks(root: InstallRoot, onDone: (Installer.Result) -> Unit) {
         val pack = currentPack ?: return onDone(Installer.Result.fail("没有选中作品"))
-        val mojang = root.mojangDir
-        if (mojang == null) {
-            return onDone(Installer.Result.fail("这个目录里找不到 com.mojang"))
-        }
+        val mojang =
+            root.mojangDir ?: return onDone(Installer.Result.fail("这个目录里找不到 com.mojang"))
         viewModelScope.launch {
             installing = true
             val result = withContext(Dispatchers.IO) {

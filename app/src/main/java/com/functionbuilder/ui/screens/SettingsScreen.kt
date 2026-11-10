@@ -155,10 +155,8 @@ fun SettingsScreen(vm: FbViewModel, nav: NavController) {
                         .fillMaxWidth()
                         .clickable {
                             val dirs = MinecraftAccess.chineseWorldDirs().map { it.absolutePath }
-                            chinaDirs = if (dirs.isEmpty()) {
+                            chinaDirs = dirs.ifEmpty {
                                 listOf("未发现中国版目录，请确认已安装并启动过中国版 Minecraft")
-                            } else {
-                                dirs
                             }
                             showChinaDirs = true
                         }

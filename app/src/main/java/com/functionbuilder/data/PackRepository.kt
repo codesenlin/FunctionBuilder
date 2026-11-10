@@ -17,7 +17,6 @@ data class PackInfo(
     val icon: File?,
     val modifiedRaw: String,
 ) {
-    val dirName: String get() = dir.name
 
     /** 卡片上显示的“上次修改时间”，旧版会把日期和时间的空格换成换行。 */
     val modifiedDisplay: String
@@ -35,7 +34,7 @@ object PackTemplate {
     /** 解压到 [destParent]，最终会得到 destParent/functiontestin/... */
     fun extract(input: java.io.InputStream, destParent: File): Boolean = runCatching {
         destParent.mkdirs()
-        java.util.zip.ZipInputStream(input.buffered()).use { zip ->
+        ZipInputStream(input.buffered()).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
                 val outFile = File(destParent, entry.name)

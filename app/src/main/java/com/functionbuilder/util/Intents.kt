@@ -26,7 +26,7 @@ object Intents {
     fun openQqGroup(context: Context, uin: String, title: String = "选择QQ"): Boolean = runCatching {
         val intent = Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("mqqapi://card/show_pslcard?src_type=internal&version=1&uin=$uin&card_type=group&source=qrcode"),
+            Uri.parse("mqqapi://card/show_pslcard?src_type=internal&version=1&uin=$uin&card_type=group&source=QRCode"),
         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(Intent.createChooser(intent, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         true

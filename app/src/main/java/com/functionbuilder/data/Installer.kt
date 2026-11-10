@@ -65,15 +65,6 @@ object Installer {
         return Result.ok("装载成功！\n请记得在“世界设置－行为包”里启用它")
     }
 
-    /** 只复制行为包本体，不合并任何索引。 */
-    fun exportTo(packDir: File, destParent: FsNode): Result {
-        ensurePackUuid(packDir) ?: return Result.fail("manifest.json 读取失败")
-        val dest = destParent.child(PACK_DIR_NAME)
-        if (dest.exists()) dest.delete()
-        return if (copyPack(packDir, dest)) Result.ok("已导出到 ${dest.name}")
-        else Result.fail("复制行为包失败")
-    }
-
     private fun copyPack(packDir: File, dest: FsNode): Boolean {
         if (!dest.mkdirs()) return false
         var ok = true

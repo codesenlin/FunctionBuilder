@@ -50,13 +50,13 @@ object BatchEngine {
         val out = ArrayList<String>(count)
         for (i in 0 until count) {
             var line = body
-            for (v in variables) {
+            for ((placeholder, expression, initial) in variables) {
                 val value = try {
-                    Evaluator(v.expression, (v.initial + i).toDouble()).evaluate()
+                    Evaluator(expression, (initial + i).toDouble()).evaluate()
                 } catch (e: Exception) {
-                    return BatchResult(emptyList(), "代数式「${v.expression}」无法计算：${e.message}")
+                    return BatchResult(emptyList(), "代数式「${expression}」无法计算：${e.message}")
                 }
-                line = line.replace(v.placeholder, formatNumber(value))
+                line = line.replace(placeholder, formatNumber(value))
             }
             out.add(line)
         }

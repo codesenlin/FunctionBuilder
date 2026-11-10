@@ -17,10 +17,6 @@ object PackManifest {
 
     fun pretty(o: JSONObject): String = o.toString(4)
 
-    fun header(o: JSONObject): JSONObject? = o.optJSONObject("header")
-
-    fun modules(o: JSONObject): JSONArray? = o.optJSONArray("modules")
-
     fun headerName(o: JSONObject?): String =
         o?.optJSONObject("header")?.optString("name").orEmpty()
 

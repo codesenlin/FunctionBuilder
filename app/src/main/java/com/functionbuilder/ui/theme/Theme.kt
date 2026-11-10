@@ -9,10 +9,7 @@ import androidx.compose.ui.graphics.Color
 
 /** 原 iApp 版本的主色：标题栏 #FF008AFF、强调色 #FFFFA800 / #FFFFF785 */
 val FbBlue = Color(0xFF008AFF)
-val FbBlueDark = Color(0xFF0066CC)
-val FbYellow = Color(0xFFFFF785)
 val FbOrange = Color(0xFFFFA800)
-val FbPaper = Color(0xFFFFEC00)
 val FbPink = Color(0xFFFF0080)
 val FbGreen = Color(0xFF00FFD3)
 

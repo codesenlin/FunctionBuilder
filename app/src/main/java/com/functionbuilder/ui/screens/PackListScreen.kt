@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue", "SameParameterValue")
+
 package com.functionbuilder.ui.screens
 
 import androidx.compose.foundation.Image
@@ -22,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -31,8 +32,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -260,9 +261,8 @@ fun PackListScreen(vm: FbViewModel, nav: NavController) {
             buttons = listOf(
                 DlgButton("取消") { pendingDelete = null },
                 DlgButton("确定", emphasis = true) {
-                    val target = pack
                     pendingDelete = null
-                    vm.deletePack(target) { error ->
+                    vm.deletePack(pack) { error ->
                         if (error != null) vm.toast(error) else vm.toast("删除成功")
                     }
                 },
