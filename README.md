@@ -20,7 +20,7 @@
 
 ## 构建
 
-需要 **JDK 17–24**（推荐 21）、Android SDK Platform 36。
+需要 **JDK 17–25**（推荐 21）、Android SDK Platform 36。
 
 ```bash
 git clone <this-repo>
@@ -32,11 +32,11 @@ export JAVA_HOME=/path/to/jdk21
 
 也可以直接用 Android Studio 打开。依赖版本集中在 `gradle/libs.versions.toml`。
 
-> **JDK 别用 25+**：Gradle 8.14.5 只支持到 Java 24，用 JDK 25 会在 Sync 阶段直接报
-> `incompatible with the Gradle JVM version 25`。新版 Android Studio 自带 JBR 25，
-> 需要在 `Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK`
-> 里手动选 21（或 17）。本机已把项目级设置固定为 `jbr-21`（`.idea/gradle.xml`，
-> 该目录不入库，所以别人 clone 后仍需自己选一次）。
+> AGP 9 要求 JDK 17 以上，Gradle 9.8 支持到 Java 25，所以新版 Android Studio 自带的
+> JBR 25 也能直接 Sync，不用再手动切 JDK。若遇到
+> `incompatible with the Gradle JVM version`，在
+> `Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK`
+> 里换成 21 或 17 即可。
 
 国内网络下载慢的话：
 
@@ -46,13 +46,16 @@ export JAVA_HOME=/path/to/jdk21
 ```
 
 Gradle 本体由 `gradle/wrapper/gradle-wrapper.properties` 的 `distributionUrl` 决定，
-国内可以把官方地址临时换成腾讯云镜像（首次下载约 130MB）：
+本仓库**默认使用腾讯云镜像**（首次下载约 150MB）：
 
 ```
-distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-8.14.5-bin.zip
+distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-9.8.2-bin.zip
 ```
 
-技术栈：Kotlin 2.2.21 · AGP 8.13.0 · Gradle 8.14.5 · Compose BOM 2024.12.01 ·
+海外或 CI 想用官方源，把域名换回 `services.gradle.org/distributions` 即可
+（CI 里已经自动替换，避免跨境下载）。
+
+技术栈：Kotlin 2.2.21 · AGP 9.5.1 · Gradle 9.8.2 · Compose BOM 2024.12.01 ·
 minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
 
 ## 签名与 V3 密钥轮换

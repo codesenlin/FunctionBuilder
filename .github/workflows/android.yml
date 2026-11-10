@@ -12,11 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up JDK 17
+      # 仓库默认走腾讯云镜像方便国内构建；runner 在境外，换回官方源更快
+      - name: Use official Gradle distribution on CI
+        run: |
+          sed -i 's#mirrors.cloud.tencent.com/gradle/#services.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
+          # runner 上已有 JDK 21，不需要 Gradle 再按 vendor 去下载 JBR toolchain
+          rm -f gradle/gradle-daemon-jvm.properties
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       # v4 才是跑在 node24 上的版本；v3 用的是已弃用的 node20，在 runner 上会失败
       - name: Set up Android SDK
