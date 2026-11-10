@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -135,14 +134,27 @@ dependencies {
 // assembleRelease 之后用 apksigner 重新签一次：新密钥 + 轮换链 + v1/v2/v3 全开。
 // 这样 Android 9 (API 28) 以上可以从旧证书平滑升级，旧设备仍按老规矩只认原证书。
 // ---------------------------------------------------------------------------
-val apksignerJar: File? = File(android.sdkDirectory, "build-tools")
-    .listFiles()
+// 新 DSL 里 android.sdkDirectory 已不可用，改为读环境变量 / local.properties
+val sdkRoot: File? = run {
+    val env = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    val fromLocal = runCatching {
+        Properties().apply {
+            val f = rootProject.file("local.properties")
+            if (f.exists()) f.inputStream().use { load(it) }
+        }.getProperty("sdk.dir")
+    }.getOrNull()
+    (env ?: fromLocal)?.takeIf { it.isNotBlank() }?.let(::File)
+}
+
+val apksignerJar: File? = sdkRoot
+    ?.resolve("build-tools")
+    ?.listFiles()
     ?.filter { it.isDirectory }
     ?.sortedByDescending { it.name }
     ?.map { File(it, "lib/apksigner.jar") }
     ?.firstOrNull { it.isFile }
 
-val signReleaseV3 by tasks.registering(JavaExec::class) {
+val signReleaseV3 = tasks.register<JavaExec>("signReleaseV3") {
     group = "build"
     description = "用 AOSP testkey + ipuser + 轮换链给 release APK 签名（v1 + v2 + v3）"
 

@@ -58,6 +58,12 @@ distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-9.8.2-bin.zip
 技术栈：Kotlin 2.2.21 · AGP 9.5.1 · Gradle 9.8.2 · Compose BOM 2024.12.01 ·
 minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
 
+> 项目已迁移到 **AGP 9 的内置 Kotlin**：`app/build.gradle.kts` 里不再应用
+> `org.jetbrains.kotlin.android`（AGP 自带 Kotlin 编译），只保留 Compose 编译器插件。
+> 同时也启用了 AGP 9 的新 DSL，所以 `gradle.properties` 里没有那些 `android.*` 兼容开关——
+> 自定义任务里也不要用 `android.sdkDirectory`，改用 `ANDROID_HOME` 环境变量或
+> `local.properties`（见 `signReleaseV3` 任务）。
+
 ## 签名与 V3 密钥轮换
 
 iApp 导出 APK 时默认用 **AOSP 公开的 testkey**（`CN=Android`）签名；0.50b 这一版是用
