@@ -193,3 +193,5 @@ app/src/main/java/com/functionbuilder/
 - 本项目是对「function制作助手」的重写，指令模板与图片素材来自原作者的作品；
   如需二次分发请遵循原作者的意愿。
 - 本项目以 [MIT](LICENSE) 许可证发布，Copyright (c) 2026 Code.森林。
+
+[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
