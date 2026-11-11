@@ -1,7 +1,6 @@
 package com.functionbuilder.ui.screens
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -48,6 +47,7 @@ import com.functionbuilder.ui.FbViewModel
 import com.functionbuilder.ui.components.DlgButton
 import com.functionbuilder.ui.components.FbDialog
 import com.functionbuilder.ui.components.FbTopBar
+import androidx.core.net.toUri
 
 /**
  * 设置页。
@@ -118,7 +118,7 @@ fun SettingsScreen(vm: FbViewModel, nav: NavController) {
                                     allFilesLauncher.launch(
                                         Intent(
                                             Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                                            Uri.parse("package:${context.packageName}"),
+                                            "package:${context.packageName}".toUri(),
                                         ),
                                     )
                                 }.onFailure {
