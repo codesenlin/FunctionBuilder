@@ -38,8 +38,8 @@ android {
         applicationId = "com.functionbuilder"
         minSdk = 21
         targetSdk = 36
-        versionCode = 100007
-        versionName = "0.51-native"
+        versionCode = 100008
+        versionName = "0.52-native"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
