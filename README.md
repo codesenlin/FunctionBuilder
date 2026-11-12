@@ -57,8 +57,13 @@ distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-9.8.2-bin.zip
 海外或 CI 想用官方源，把域名换回 `services.gradle.org/distributions` 即可
 （CI 里已经自动替换，避免跨境下载）。
 
-技术栈：Kotlin 2.2.21 · AGP 9.5.1 · Gradle 9.8.2 · Compose BOM 2024.12.01 ·
-minSdk 24 / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
+技术栈：Kotlin 2.4.21 · AGP 9.5.1 · Gradle 9.8.2 · Compose BOM 2025.10.00（Compose 1.9.3）·
+minSdk **21** / targetSdk 36 · 无第三方运行时依赖（图片用 `BitmapFactory` 采样解码，JSON 用 `org.json`）。
+
+> **为什么依赖不是最新的**：Compose 1.10 起、以及 activity 1.12+ / lifecycle 2.10+ /
+> navigation 2.9+ 都把 minSdk 提到了 23、24。要保住 Android 5.0（API 21）就得停在这些
+> 版本线上：Compose BOM 2025.10.00（1.9.3）、activity-compose 1.11.0、lifecycle 2.9.4、
+> navigation-compose 2.8.5、core-ktx 1.17.0。升到更新的版本会强制抬到 minSdk 23+。
 
 > 项目已迁移到 **AGP 9 的内置 Kotlin**：`app/build.gradle.kts` 里不再应用
 > `org.jetbrains.kotlin.android`（AGP 自带 Kotlin 编译），只保留 Compose 编译器插件。
@@ -73,7 +78,7 @@ iApp 导出 APK 时默认用 **AOSP 公开的 testkey**（`CN=Android`）签名�
 
 | 方案              | 签名证书          | 生效范围                                   |
 |-------------------|-------------------|--------------------------------------------|
-| v1（JAR signing） | AOSP testkey      | API < 24（本项目 minSdk 24，属兼容性冗余） |
+| v1（JAR signing） | AOSP testkey      | API 21 – 23（这些版本只认 v1）             |
 | v2                | AOSP testkey      | API 24 – 27                                |
 | v3                | `ipuser` + 轮换链 | API 28 及以上                              |
 
@@ -102,7 +107,7 @@ apksigner 签出 `app-release.apk`（AOSP 签 v1/v2 + ipuser 签 v3 + lineage）
 
 ## 升级兼容性
 
-| 已装版本                            | Android 7–8.1（API 24–27） | Android 9+（API 28+）   |
+| 已装版本                            | Android 5.0–8.1（API 21–27） | Android 9+（API 28+）  |
 |-------------------------------------|----------------------------|-------------------------|
 | AOSP testkey 签名（iApp 直接导出）  | ✅ 可升级                  | ✅ 可升级（凭 lineage） |
 | ipuser 签名（0.50b 及以前的正式版） | ❌ 不可升级                | ✅ 可升级               |

@@ -36,7 +36,7 @@ android {
 
     defaultConfig {
         applicationId = "com.functionbuilder"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 36
         versionCode = 100007
         versionName = "0.51-native"
