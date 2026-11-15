@@ -1,10 +1,10 @@
 # function制作助手（原生重写版）
 
-[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
 [![CI](https://github.com/codesenlin/FunctionBuilder/actions/workflows/android.yml/badge.svg)](https://github.com/codesenlin/FunctionBuilder/actions/workflows/android.yml)
+[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
 [![License](https://img.shields.io/github/license/codesenlin/FunctionBuilder?style=flat-square&color=4D6BFE)](LICENSE)
-[![Release](https://img.shields.io/github/v/tag/codesenlin/FunctionBuilder?style=flat-square&label=release&color=4D6BFE)](https://github.com/codesenlin/FunctionBuilder/releases)
 [![Version](https://img.shields.io/badge/version-0.52--native-4D6BFE?style=flat-square)](https://github.com/codesenlin/FunctionBuilder/tags)
+[![Release](https://img.shields.io/github/v/tag/codesenlin/FunctionBuilder?style=flat-square&label=release&color=4D6BFE)](https://github.com/codesenlin/FunctionBuilder/releases)
 
 把 iApp（裕语言 5.0.1012）编写的「function制作助手 0.50b」重写为 **Kotlin + Jetpack Compose** 的
 原生 Android 应用。
