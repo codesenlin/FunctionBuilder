@@ -1,6 +1,10 @@
 # function制作助手（原生重写版）
 
 [![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
+[![CI](https://github.com/codesenlin/FunctionBuilder/actions/workflows/android.yml/badge.svg)](https://github.com/codesenlin/FunctionBuilder/actions/workflows/android.yml)
+[![License](https://img.shields.io/github/license/codesenlin/FunctionBuilder?style=flat-square&color=4D6BFE)](LICENSE)
+[![Release](https://img.shields.io/github/v/tag/codesenlin/FunctionBuilder?style=flat-square&label=release&color=4D6BFE)](https://github.com/codesenlin/FunctionBuilder/releases)
+[![Version](https://img.shields.io/badge/version-0.52--native-4D6BFE?style=flat-square)](https://github.com/codesenlin/FunctionBuilder/tags)
 
 把 iApp（裕语言 5.0.1012）编写的「function制作助手 0.50b」重写为 **Kotlin + Jetpack Compose** 的
 原生 Android 应用。
@@ -195,8 +199,18 @@ app/src/main/java/com/functionbuilder/
 已在 Android 14（OPPO PERM10）上实测：覆盖安装、新建作品、编辑保存回读、批量生成、
 作品信息回填、装载流程的存档列表与 SAF 兜底。
 
+## 致谢
+
+- **小傻羊驼** —— 原版「function制作助手」的作者，指令模板与图片素材都出自他手。
+  他的 B 站空间：[space.bilibili.com/328984707](https://space.bilibili.com/328984707)
+- **yangzii** —— 提供了最初的 function 模板与思路。
+- iApp（裕语言）平台 —— 原版就是用它写出来的。
+
+如果这个重写版帮到了你，也请去原版那边给作者点个关注呀。
+
 ## 说明
 
 - 本项目是对「function制作助手」的重写，指令模板与图片素材来自原作者的作品；
   如需二次分发请遵循原作者的意愿。
 - 本项目以 [MIT](LICENSE) 许可证发布，Copyright (c) 2026 Code.森林。
+- 版本变更记录见 [CHANGELOG.md](CHANGELOG.md)。
