@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -5,6 +6,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// ---------------------------------------------------------------------------
+// 版本号唯一来源：app/version.json
+// 改版本只动那个 JSON，kts 在配置阶段读进来。
+// ---------------------------------------------------------------------------
+@Suppress("UNCHECKED_CAST")
+val appVersion: Map<String, Any> =
+    JsonSlurper().parse(rootProject.file("app/version.json")) as Map<String, Any>
+val appVersionCode = (appVersion["versionCode"] as Number).toInt()
+val appVersionName = appVersion["versionName"] as String
 
 // ---------------------------------------------------------------------------
 // 签名分两条路：
@@ -38,8 +49,8 @@ android {
         applicationId = "com.functionbuilder"
         minSdk = 21
         targetSdk = 36
-        versionCode = 100008
-        versionName = "0.52-native"
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
